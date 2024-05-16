@@ -1,15 +1,12 @@
+// scanner.h
 #ifndef SCANNER_H
 #define SCANNER_H
 
 #include <string>
-#include <iostream>
+#include <vector>
 
 enum class TokenType {
-    Identifier,
-    Integer,
-    String,
-    EndOfFile,
-    Error
+    KEYWORD, IDENTIFIER, NUMBER, STRING, OPERATOR, SEPARATOR, COMMENT, UNKNOWN, END_OF_FILE
 };
 
 struct Token {
@@ -22,23 +19,26 @@ struct Token {
 class Scanner {
 public:
     Scanner(const std::string& source);
-    Token scan();
+    std::vector<Token> scanTokens();
 
 private:
-    bool is_whitespace(char ch);
-    bool is_digit(char ch);
-    bool is_alpha(char ch);
-
-    void skip_whitespace();
-    Token make_token(TokenType type);
-    Token scan_number();
-    Token scan_identifier();
-    Token scan_string();
-
     std::string source;
-    size_t index;
+    std::vector<Token> tokens;
+    int start;
+    int current;
     int line;
     int column;
+
+    bool isAtEnd();
+    char advance();
+    void addToken(TokenType type, const std::string& value = "");
+    char peek();
+    void scanToken();
+    void scanIdentifier();
+    void scanNumber();
+    void scanString();
+    void skipWhitespace();
+    void skipComment();
 };
 
 #endif // SCANNER_H

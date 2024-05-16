@@ -1,80 +1,96 @@
+// scanner.cpp
 #include "scanner.h"
+#include <cctype>
 
-Scanner::Scanner(const std::string& source)
-    : source(source), index(0), line(1), column(1) {}
+Scanner::Scanner(const std::string& source) 
+    : source(source), start(0), current(0), line(1), column(0) {}
 
-Token Scanner::scan() {
-    skip_whitespace();
-
-    if (index >= source.size()) {
-        return make_token(TokenType::EndOfFile);
+std::vector<Token> Scanner::scanTokens() {
+    while (!isAtEnd()) {
+        start = current;
+        scanToken();
     }
+    tokens.push_back({TokenType::END_OF_FILE, "", line, column});
+    return tokens;
+}
 
-    char ch = source[index];
-    if (is_digit(ch)) {
-        return scan_number();
-    } else if (is_alpha(ch)) {
-        return scan_identifier();
-    } else if (ch == '"') {
-        return scan_string();
-    } else {
-        return make_token(TokenType::Error);
+bool Scanner::isAtEnd() {
+    return current >= source.length();
+}
+
+char Scanner::advance() {
+    current++;
+    column++;
+    return source[current - 1];
+}
+
+void Scanner::addToken(TokenType type, const std::string& value) {
+    tokens.push_back({type, value, line, column});
+}
+
+char Scanner::peek() {
+    if (isAtEnd()) return '\0';
+    return source[current];
+}
+
+void Scanner::scanToken() {
+    char c = advance();
+    switch (c) {
+        case '(': addToken(TokenType::SEPARATOR, "("); break;
+        case ')': addToken(TokenType::SEPARATOR, ")"); break;
+        // ... Handle other single-character tokens
+        default:
+            if (std::isalpha(c) || c == '_') {
+                scanIdentifier();
+            } else if (std::isdigit(c)) {
+                scanNumber();
+            } else if (c == '\"') {
+                scanString();
+            } else if (std::isspace(c)) {
+                skipWhitespace();
+            } else {
+                addToken(TokenType::UNKNOWN, std::string(1, c));
+            }
+            break;
     }
 }
 
-void Scanner::skip_whitespace() {
-    while (index < source.size() && is_whitespace(source[index])) {
-        if (source[index] == '\n') {
+void Scanner::scanIdentifier() {
+    while (std::isalnum(peek()) || peek() == '_') advance();
+    std::string value = source.substr(start, current - start);
+    // Check if the identifier is a keyword
+    addToken(TokenType::IDENTIFIER, value);
+}
+
+void Scanner::scanNumber() {
+    while (std::isdigit(peek())) advance();
+    std::string value = source.substr(start, current - start);
+    addToken(TokenType::NUMBER, value);
+}
+
+void Scanner::scanString() {
+    while (peek() != '\"' && !isAtEnd()) {
+        advance();
+    }
+    if (isAtEnd()) {
+        // Handle unterminated string error
+        return;
+    }
+    advance(); // Consume the closing "
+    std::string value = source.substr(start + 1, current - start - 2);
+    addToken(TokenType::STRING, value);
+}
+
+void Scanner::skipWhitespace() {
+    while (std::isspace(peek())) {
+        if (peek() == '\n') {
             line++;
-            column = 1;
-        } else {
-            column++;
+            column = 0;
         }
-        index++;
+        advance();
     }
 }
 
-Token Scanner::make_token(TokenType type) {
-    return {type, "", line, column};
-}
-
-Token Scanner::scan_number() {
-    size_t start = index;
-    while (index < source.size() && is_digit(source[index])) {
-        index++;
-    }
-    return make_token(TokenType::Integer, source.substr(start, index - start));
-}
-
-Token Scanner::scan_identifier() {
-    size_t start = index;
-    while (index < source.size() && is_alpha(source[index]) || is_digit(source[index])) {
-        index++;
-    }
-    return make_token(TokenType::Identifier, source.substr(start, index - start));
-}
-
-Token Scanner::scan_string() {
-    index++;  // Skip the opening quote
-    size_t start = index;
-    while (index < source.size() && source[index] != '"') {
-        index++;
-    }
-    if (index == source.size()) {
-        return make_token(TokenType::Error);
-    }
-    index++;  // Skip the closing quote
-    return make_token(TokenType::String, source.substr(start + 1, index - start - 2));
-}
-
-bool Scanner::is_whitespace(char ch) {
-    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
-}
-
-bool Scanner::is_digit(char ch) {
-    return ch >= '0' && ch <= '9';
-}
-
-bool Scanner::is_alpha(char ch) {
-    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_';
+void Scanner::skipComment() {
+    while (peek() != '\n' && !isAtEnd()) advance();
 }
