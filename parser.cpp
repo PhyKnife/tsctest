@@ -5,8 +5,12 @@
 Parser::Parser(const std::vector<Token>& tokens) 
     : tokens(tokens), current(0) {}
 
-ExprPtr Parser::parse() {
-    return expression();
+std::vector<ExprPtr> Parser::parse() {
+    std::vector<ExprPtr> statements;
+    while (!isAtEnd()) {
+        statements.push_back(variableDeclaration());
+    }
+    return statements;
 }
 
 bool Parser::isAtEnd() {
@@ -71,4 +75,17 @@ int Parser::getPrecedence() {
         return 1; // Set appropriate precedence for each operator
     }
     return -1;
+}
+
+ExprPtr Parser::variableDeclaration() {
+    if (match(TokenType::IDENTIFIER)) {
+        std::string name = previous().value;
+        if (match(TokenType::OPERATOR) && previous().value == "=") {
+            ExprPtr initializer = expression();
+            return std::make_shared<BinaryExpr>(
+                std::make_shared<IdentifierExpr>(name), "=", initializer
+            );
+        }
+    }
+    throw std::runtime_error("Expected variable declaration");
 }

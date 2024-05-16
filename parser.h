@@ -10,7 +10,7 @@
 class Parser {
 public:
     Parser(const std::vector<Token>& tokens);
-    ExprPtr parse();
+    std::vector<ExprPtr> parse();
 
 private:
     const std::vector<Token>& tokens;
@@ -27,6 +27,7 @@ private:
     ExprPtr primary();
     ExprPtr binaryOp(ExprPtr left, int precedence);
     int getPrecedence();
+    ExprPtr variableDeclaration();
 };
 
 #endif // PARSER_H

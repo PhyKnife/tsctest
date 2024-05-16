@@ -22,9 +22,11 @@ int main(int argc, char* argv[]) {
 
     Parser parser(tokens);
     try {
-        ExprPtr ast = parser.parse();
+        std::vector<ExprPtr> ast = parser.parse();
         std::cout << "Parsing succeeded!" << std::endl;
-        ast->print();
+        for (const auto& expr : ast) {
+            expr->print();
+        }
     } catch (const std::runtime_error& e) {
         std::cerr << "Parsing error: " << e.what() << std::endl;
     }
