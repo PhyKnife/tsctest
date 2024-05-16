@@ -30,6 +30,6 @@ int main(int argc, char* argv[]) {
     } catch (const std::runtime_error& e) {
         std::cerr << "Parsing error: " << e.what() << std::endl;
     }
-
+    
     return 0;
 }
