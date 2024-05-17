@@ -19,13 +19,6 @@ int main(int argc, char* argv[]) {
     std::string source((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     Scanner scanner(source);
     std::vector<Token> tokens = scanner.scanTokens();
-    for (const Token& token : tokens) {
-        std::cout << "Token(Type: " << static_cast<int>(token.type) 
-                  << ", Value: " << token.value 
-                  << ", Line: " << token.line 
-                  << ", Column: " << token.column << ")" << std::endl;
-    }
-    std::cout << std::endl;
     Parser parser(tokens);
     try {
         std::vector<ExprPtr> ast = parser.parse();
